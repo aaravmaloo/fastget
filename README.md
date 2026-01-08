@@ -21,8 +21,8 @@ mkdir build
 cd build
 
 # Configure and build
-cmake ..
-cmake --build . --config Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 
 # The binary will be at:
 # fastget/build/fastget.exe

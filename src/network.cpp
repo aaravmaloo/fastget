@@ -1,4 +1,4 @@
-// No comments found in previous view of network.cpp and main.cpp except the one I targeted.
+
 #include <iostream>
 
 namespace fastget {

@@ -4,11 +4,19 @@
 
 namespace fastget {
 
-Downloader::Downloader(const std::string& url, const std::string& output_path, int num_threads)
-    : url_(url), output_path_(output_path), num_threads_(num_threads), 
+Downloader::Downloader(const std::string& url, const std::vector<std::string>& mirrors, const std::string& output_path, int num_threads)
+    : url_(url), mirrors_(mirrors), output_path_(output_path), num_threads_(num_threads), 
       writer_(output_path) {
     
-    long size = NetworkLayer::GetFileSize(url_);
+    std::vector<std::string> all_urls = mirrors_;
+    all_urls.insert(all_urls.begin(), url_);
+
+    long size = -1;
+    for (const auto& u : all_urls) {
+        size = NetworkLayer::GetFileSize(u);
+        if (size > 0) break;
+    }
+
     if (size > 0) {
         total_size_ = static_cast<size_t>(size);
         chunk_manager_ = std::make_unique<ChunkManager>(total_size_);
@@ -62,8 +70,20 @@ void Downloader::DownloadThread() {
         std::vector<char> buffer;
         buffer.reserve(chunk->end - chunk->start + 1);
 
+        std::vector<std::string> all_urls = mirrors_;
+        all_urls.insert(all_urls.begin(), url_);
+
         auto startTime = std::chrono::steady_clock::now();
-        if (NetworkLayer::DownloadChunk(url_, chunk->start, chunk->end, buffer)) {
+        bool success = false;
+
+        for (const auto& current_url : all_urls) {
+            if (NetworkLayer::DownloadChunk(current_url, chunk->start, chunk->end, buffer)) {
+                success = true;
+                break;
+            }
+        }
+
+        if (success) {
             writer_.WriteAt(chunk->start, buffer);
             
             auto endTime = std::chrono::steady_clock::now();

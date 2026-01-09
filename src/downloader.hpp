@@ -13,7 +13,7 @@ namespace fastget {
 
 class Downloader {
 public:
-    Downloader(const std::string& url, const std::string& output_path, int num_threads = 8);
+    Downloader(const std::string& url, const std::vector<std::string>& mirrors, const std::string& output_path, int num_threads = 8);
     
     bool Start();
     void Pause();
@@ -27,6 +27,7 @@ private:
     void ProgressWatcher();
 
     std::string url_;
+    std::vector<std::string> mirrors_;
     std::string output_path_;
     int num_threads_;
     

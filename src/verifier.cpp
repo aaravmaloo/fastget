@@ -1,17 +1,28 @@
 #include "verifier.hpp"
 #include <openssl/evp.h>
+#include <openssl/md5.h>
+#include <openssl/sha.h>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
 
 namespace fastget {
 
-std::string Verifier::ComputeSHA256(const std::string& filename) {
+std::string Verifier::ComputeHash(const std::string& filename, Verifier::HashType type) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) return "";
 
     EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-    const EVP_MD* md = EVP_sha256();
+    const EVP_MD* md = nullptr;
+    
+    switch (type) {
+        case Verifier::HashType::MD5: md = EVP_md5(); break;
+        case Verifier::HashType::SHA1: md = EVP_sha1(); break;
+        case Verifier::HashType::SHA512: md = EVP_sha512(); break;
+        case Verifier::HashType::SHA256: 
+        default: md = EVP_sha256(); break;
+    }
+
     EVP_DigestInit_ex(ctx, md, nullptr);
 
     char buffer[32768];
@@ -32,8 +43,24 @@ std::string Verifier::ComputeSHA256(const std::string& filename) {
     return ss.str();
 }
 
-bool Verifier::Verify(const std::string& filename, const std::string& expected_hash) {
-    std::string actual_hash = ComputeSHA256(filename);
+std::string Verifier::ComputeSHA256(const std::string& filename) {
+    return ComputeHash(filename, HashType::SHA256);
+}
+
+std::string Verifier::ComputeMD5(const std::string& filename) {
+    return ComputeHash(filename, HashType::MD5);
+}
+
+std::string Verifier::ComputeSHA1(const std::string& filename) {
+    return ComputeHash(filename, HashType::SHA1);
+}
+
+std::string Verifier::ComputeSHA512(const std::string& filename) {
+    return ComputeHash(filename, HashType::SHA512);
+}
+
+bool Verifier::Verify(const std::string& filename, const std::string& expected_hash, Verifier::HashType type) {
+    std::string actual_hash = ComputeHash(filename, type);
     return actual_hash == expected_hash;
 }
 

@@ -20,6 +20,8 @@ public:
     Chunk* GetNextChunk();
     void MarkSuccess(size_t chunk_id, double speed);
     void MarkFailed(size_t chunk_id);
+    bool MarkCompleted(size_t chunk_id);
+    bool GetChunkRange(size_t chunk_id, size_t& start, size_t& end) const;
 
     size_t GetTotalChunks() const { return chunks_.size(); }
     size_t GetDownloadedChunks() const { return downloaded_count_; }
@@ -36,10 +38,9 @@ private:
     size_t downloaded_count_ = 0;
     std::mutex manager_mutex_;
 
-    // Performance tracking
     size_t success_streak_ = 0;
     size_t fail_streak_ = 0;
     const size_t STREAK_THRESHOLD = 3;
 };
 
-} // namespace fastget
+}

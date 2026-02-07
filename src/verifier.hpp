@@ -17,4 +17,4 @@ public:
     static bool Verify(const std::string& filename, const std::string& expected_hash, HashType type = HashType::SHA256);
 };
 
-} // namespace fastget
+}

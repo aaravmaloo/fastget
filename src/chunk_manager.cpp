@@ -10,7 +10,6 @@ ChunkManager::ChunkManager(size_t total_size, size_t initial_chunk_size)
 
     size_t offset = 0;
     size_t id = 0;
-    // Safety limit: max 1 million chunks
     const size_t MAX_CHUNKS = 1000000;
 
     while (offset < total_size_ && id < MAX_CHUNKS) {
@@ -49,6 +48,24 @@ void ChunkManager::MarkFailed(size_t chunk_id) {
     }
 }
 
+bool ChunkManager::MarkCompleted(size_t chunk_id) {
+    std::lock_guard<std::mutex> lock(manager_mutex_);
+    if (chunk_id >= chunks_.size()) return false;
+    if (!chunks_[chunk_id].downloaded) {
+        chunks_[chunk_id].downloaded = true;
+        chunks_[chunk_id].in_progress = false;
+        downloaded_count_++;
+    }
+    return true;
+}
+
+bool ChunkManager::GetChunkRange(size_t chunk_id, size_t& start, size_t& end) const {
+    if (chunk_id >= chunks_.size()) return false;
+    start = chunks_[chunk_id].start;
+    end = chunks_[chunk_id].end;
+    return true;
+}
+
 void ChunkManager::AdaptChunkSize(bool success, double speed) {
     if (success) {
         fail_streak_ = 0;
@@ -56,7 +73,6 @@ void ChunkManager::AdaptChunkSize(bool success, double speed) {
         if (success_streak_ >= STREAK_THRESHOLD) {
             current_chunk_size_ *= 2;
             success_streak_ = 0;
-            // Cap chunk size to 16MB
             if (current_chunk_size_ > 16 * 1024 * 1024) {
                 current_chunk_size_ = 16 * 1024 * 1024;
             }
@@ -64,14 +80,14 @@ void ChunkManager::AdaptChunkSize(bool success, double speed) {
     } else {
         success_streak_ = 0;
         fail_streak_++;
-        if (fail_streak_ >= 1) { // Immediate adaptation on failure for "flaky network"
+        if (fail_streak_ >= 1) {
             current_chunk_size_ /= 2;
             if (current_chunk_size_ < 512 * 1024) {
-                current_chunk_size_ = 512 * 1024; // Min 512KB
+                current_chunk_size_ = 512 * 1024;
             }
             fail_streak_ = 0;
         }
     }
 }
 
-} // namespace fastget
+}

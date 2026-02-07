@@ -64,4 +64,4 @@ bool Verifier::Verify(const std::string& filename, const std::string& expected_h
     return actual_hash == expected_hash;
 }
 
-} // namespace fastget
+}

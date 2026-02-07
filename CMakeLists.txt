@@ -22,6 +22,7 @@ set(SOURCES
     src/file_writer.cpp
     src/verifier.cpp
     src/ui.cpp
+    src/resume_state.cpp
 )
 
 add_executable(fastget ${SOURCES})

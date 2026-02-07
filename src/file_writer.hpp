@@ -25,4 +25,4 @@ private:
     std::mutex write_mutex_;
 };
 
-} // namespace fastget
+}

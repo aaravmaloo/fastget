@@ -54,4 +54,4 @@ size_t FileWriter::GetSize() const {
     return std::filesystem::file_size(filename_);
 }
 
-} // namespace fastget
+}
